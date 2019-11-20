@@ -42,6 +42,15 @@ type eventData struct {
 	Options   interface{} `json:"options"`
 }
 
+// Matches the following:
+// " vs. "
+// " vs "
+// ", "
+// " , "
+// " and "
+// " & "
+var playersPattern = regexp.MustCompile(`\s*(\svs.\s|\svs\s|\s*,\s|\sand\s|\s&\s)\s*`)
+
 // TransformHoraro transforms the response from the official horaro to a better format
 func TransformHoraro(horaro *HoraroResponse) TransformedHoraroResponse {
 	response := TransformedHoraroResponse{}
@@ -80,14 +89,7 @@ func TransformHoraro(horaro *HoraroResponse) TransformedHoraroResponse {
 		eventList[i].Options = value.Options
 
 		if playersColumnIndex > -1 {
-			// Split on:
-			// " vs. "
-			// " vs "
-			// ", "
-			// " , "
-			// " and "
-			// " & "
-			eventList[i].Players = regexp.MustCompile("\\s*(\\svs.\\s|\\svs\\s|\\s*,\\s|\\sand\\s|\\s&\\s)\\s*").Split(*value.Data[playersColumnIndex], -1)
+			eventList[i].Players = playersPattern.Split(*value.Data[playersColumnIndex], -1)
 		}
 		if gameColumnIndex > -1 {
 			eventList[i].Game = value.Data[gameColumnIndex]

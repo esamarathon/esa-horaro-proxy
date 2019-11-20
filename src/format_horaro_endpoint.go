@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+var nonURLPattern = regexp.MustCompile(`^[^/]+$`)
+
 // FormatHoraroEndpoint validates the users supplied endpoint and throws an error if it doesn't exist
 func FormatHoraroEndpoint(parameter string) (*string, error) {
 	if strings.HasSuffix(parameter, ".json") == false {
@@ -15,7 +17,7 @@ func FormatHoraroEndpoint(parameter string) (*string, error) {
 	}
 
 	// If parameter isn't a URL
-	if regexp.MustCompile("^[^\\/]+$").MatchString(parameter) {
+	if nonURLPattern.MatchString(parameter) {
 		horaroURL := fmt.Sprintf("https://horaro.org/esa/%s", parameter)
 		return &horaroURL, nil
 	}
