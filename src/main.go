@@ -17,6 +17,7 @@ func eventsPageHandler(w http.ResponseWriter, r *http.Request) {
 	// Enable CORS
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 	w.Header().Set("Content-Type", "application/json")
 
 	// Ignore Options request from CORS
@@ -49,6 +50,7 @@ func eventsPageHandler(w http.ResponseWriter, r *http.Request) {
 	// Transform Horaro response into a better format
 	transformedHoraro := TransformHoraro(horaro)
 
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(transformedHoraro)
 
 	// Store current horaro response in cache
