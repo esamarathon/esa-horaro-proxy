@@ -1,0 +1,7 @@
+version: "3.7"
+services:
+  app:
+    image: esa-horaro-proxy
+    build: .
+    ports:
+      - "80:8080"
