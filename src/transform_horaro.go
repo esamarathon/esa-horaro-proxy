@@ -46,8 +46,7 @@ type eventData struct {
 func TransformHoraro(horaro *HoraroResponse) TransformedHoraroResponse {
 	response := TransformedHoraroResponse{}
 
-	// Meta
-
+	// Format response Meta
 	response.Meta.Name = horaro.Schedule.Name
 	response.Meta.Slug = horaro.Schedule.Slug
 	response.Meta.Timezone = horaro.Schedule.Timezone
@@ -62,8 +61,7 @@ func TransformHoraro(horaro *HoraroResponse) TransformedHoraroResponse {
 	response.Meta.Event = horaro.Schedule.Event
 	response.Meta.Exported = horaro.Meta.Exported
 
-	// Data
-
+	// Format response Data
 	gameColumnIndex := IndexOfCaseInsensitive("Game", horaro.Schedule.Columns)
 	playersColumnIndex := IndexOfCaseInsensitive("Player(s)", horaro.Schedule.Columns)
 	platformColumnIndex := IndexOfCaseInsensitive("Platform", horaro.Schedule.Columns)

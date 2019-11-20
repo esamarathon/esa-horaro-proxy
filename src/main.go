@@ -9,15 +9,14 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/patrickmn/go-cache"
+	"github.com/rs/cors"
 )
 
-var c = cache.New(15*time.Minute, 30*time.Minute)
+var expiration = 15 * time.Minute
+var cleanupInterval = 30 * time.Minute
+var memoryCache = cache.New(expiration, cleanupInterval)
 
 func eventsPageHandler(w http.ResponseWriter, r *http.Request) {
-	// Enable CORS
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 	w.Header().Set("Content-Type", "application/json")
 
 	// Ignore Options request from CORS
@@ -25,47 +24,58 @@ func eventsPageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get year parameter from URL
-	year := mux.Vars(r)["year"]
+	// Get endpoint parameter from URL
+	parameter := mux.Vars(r)["endpoint"]
+	endpointPtr, err := FormatHoraroEndpoint(parameter)
+	if err != nil {
+		defer log.Printf("Invalid horaro link '%s': %s", parameter, err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": fmt.Sprintf("Invalid Horaro link: %s", err.Error()),
+		})
+		return
+	}
+	endpoint := *endpointPtr
 
 	// Return horaro response if still cached
-	response, found := c.Get(year)
+	response, found := memoryCache.Get(endpoint)
 	if found {
+		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(response)
 		return
 	}
 
-	log.Printf("Fetching new data for '%s' from Horaro", year)
+	log.Printf("Fetching new data for '%s' from Horaro", endpoint)
 
-	horaro, err := FetchHoraro(year)
+	horaro, err := FetchHoraro(endpoint)
 	if err != nil {
-		log.Printf("Failed fetching horaro: %s", err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		defer log.Printf("Could not find the horaro data from '%s': %s", endpoint, err.Error())
+		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"error": "Failed fetching Horaro data",
+			"error": "Could not find the Horaro data",
 		})
 		return
 	}
 
-	// Transform Horaro response into a better format
+	// Transform Horaro response into a better format and save it in cache
 	transformedHoraro := TransformHoraro(horaro)
+	defer memoryCache.Set(endpoint, &transformedHoraro, cache.DefaultExpiration)
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(transformedHoraro)
-
-	// Store current horaro response in cache
-	c.Set(year, transformedHoraro, cache.DefaultExpiration)
 }
 
-var port = 8080
-
 func main() {
-	r := mux.NewRouter()
-	r.HandleFunc("/api/esa/{year}", eventsPageHandler).Methods(http.MethodGet, http.MethodOptions)
+	router := mux.NewRouter()
+	router.SkipClean(true)
+	router.HandleFunc("/v1/esa/{endpoint:.+}", eventsPageHandler)
+
+	handler := cors.Default().Handler(router)
 
 	// Create address for HTTP server to listen on
+	port := 8080
 	addr := fmt.Sprintf(":%d", port)
 
 	log.Printf("Listening on %s", addr)
-	log.Fatal(http.ListenAndServe(addr, r))
+	log.Fatal(http.ListenAndServe(addr, handler))
 }

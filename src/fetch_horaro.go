@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net"
 	"net/http"
 	"time"
@@ -58,10 +57,8 @@ var httpClient = &http.Client{
 }
 
 // FetchHoraro fetches the full events from horaro
-func FetchHoraro(year string) (*HoraroResponse, error) {
-	url := fmt.Sprintf("https://horaro.org/esa/%s-one.json", year)
-
-	req, err := http.NewRequest("GET", url, nil)
+func FetchHoraro(endpoint string) (*HoraroResponse, error) {
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
