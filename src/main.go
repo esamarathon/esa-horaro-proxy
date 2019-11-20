@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -15,6 +16,13 @@ import (
 var expiration = 15 * time.Minute
 var cleanupInterval = 30 * time.Minute
 var memoryCache = cache.New(expiration, cleanupInterval)
+
+func caselessMatcher(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.URL.Path = strings.ToLower(r.URL.Path)
+		next.ServeHTTP(w, r)
+	})
+}
 
 func eventsPageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -70,7 +78,8 @@ func main() {
 	router.SkipClean(true)
 	router.HandleFunc("/v1/esa/{endpoint:.+}", eventsPageHandler)
 
-	handler := cors.Default().Handler(router)
+	handler := caselessMatcher(router)
+	handler = cors.Default().Handler(handler)
 
 	// Create address for HTTP server to listen on
 	port := 8080
