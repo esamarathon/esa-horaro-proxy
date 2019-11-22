@@ -2,6 +2,7 @@ package main
 
 import (
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -42,6 +43,17 @@ type eventData struct {
 	Options   interface{} `json:"options"`
 }
 
+// indexOf gets the index of an element in a list ignoring casing
+func indexOf(element string, data []string, compareFunc func(s, t string) bool) int {
+	for i, v := range data {
+		if compareFunc(element, v) {
+			return i
+		}
+	}
+
+	return -1
+}
+
 // Matches the following:
 // " vs. "
 // " vs "
@@ -71,14 +83,14 @@ func TransformHoraro(horaro *HoraroResponse) TransformedHoraroResponse {
 	response.Meta.Exported = horaro.Meta.Exported
 
 	// Format response Data
-	gameColumnIndex := IndexOfCaseInsensitive("Game", horaro.Schedule.Columns)
-	playersColumnIndex := IndexOfCaseInsensitive("Player(s)", horaro.Schedule.Columns)
-	platformColumnIndex := IndexOfCaseInsensitive("Platform", horaro.Schedule.Columns)
-	categoryColumnIndex := IndexOfCaseInsensitive("Category", horaro.Schedule.Columns)
-	noteColumnIndex := IndexOfCaseInsensitive("Note", horaro.Schedule.Columns)
-	layoutColumnIndex := IndexOfCaseInsensitive("Layout", horaro.Schedule.Columns)
-	infoColumIndex := IndexOfCaseInsensitive("Info", horaro.Schedule.Columns)
-	idColumnIndex := IndexOfCaseInsensitive("ID", horaro.Schedule.Columns)
+	gameColumnIndex := indexOf("Game", horaro.Schedule.Columns, strings.EqualFold)
+	playersColumnIndex := indexOf("Player(s)", horaro.Schedule.Columns, strings.EqualFold)
+	platformColumnIndex := indexOf("Platform", horaro.Schedule.Columns, strings.EqualFold)
+	categoryColumnIndex := indexOf("Category", horaro.Schedule.Columns, strings.EqualFold)
+	noteColumnIndex := indexOf("Note", horaro.Schedule.Columns, strings.EqualFold)
+	layoutColumnIndex := indexOf("Layout", horaro.Schedule.Columns, strings.EqualFold)
+	infoColumIndex := indexOf("Info", horaro.Schedule.Columns, strings.EqualFold)
+	idColumnIndex := indexOf("ID", horaro.Schedule.Columns, strings.EqualFold)
 
 	eventList := make([]eventData, len(horaro.Schedule.Items))
 

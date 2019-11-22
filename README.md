@@ -26,7 +26,7 @@ or, with docker-compose:
 
 ## Routes
 
-`/v1/esa/{endpoint}`: Get the events for a specific year
+GET `/v1/esa/{endpoint}`: Get the events for a specific year
 
 Where endpoint can be in form:
 
