@@ -26,7 +26,8 @@ or, with docker-compose:
 
 ## Routes
 
-GET `/v1/esa/{endpoint}`: Get the events for a specific year
+GET `/v1/esa/schedule/{endpoint}`: Get the speedruns by day for an event
+GET `/v1/esa/upcoming/{endpoint}?amount={int}`: Get the upcoming speedruns for an event (amount is optional, default is 5)
 
 Where endpoint can be in form:
 

@@ -6,27 +6,35 @@ import (
 	"time"
 )
 
-// TransformedHoraroResponse is the modified response from horaro to be more accessible
+type horaroMeta struct {
+	Name        string    `json:"name"`
+	Slug        string    `json:"slug"`
+	Timezone    string    `json:"timezone"`
+	Start       time.Time `json:"start"`
+	Website     string    `json:"website"`
+	Twitter     string    `json:"twitter"`
+	Twitch      string    `json:"twitch"`
+	Description string    `json:"description"`
+	Setup       string    `json:"setup"`
+	Updated     time.Time `json:"updated"`
+	URL         string    `json:"url"`
+	Event       struct {
+		Name string `json:"name"`
+		Slug string `json:"slug"`
+	} `json:"event"`
+	Exported time.Time `json:"exported"`
+}
+
+// TransformedHoraroResponse is the modified response from horaro in list form
 type TransformedHoraroResponse struct {
-	Meta struct {
-		Name        string    `json:"name"`
-		Slug        string    `json:"slug"`
-		Timezone    string    `json:"timezone"`
-		Start       time.Time `json:"start"`
-		Website     string    `json:"website"`
-		Twitter     string    `json:"twitter"`
-		Twitch      string    `json:"twitch"`
-		Description string    `json:"description"`
-		Setup       string    `json:"setup"`
-		Updated     time.Time `json:"updated"`
-		URL         string    `json:"url"`
-		Event       struct {
-			Name string `json:"name"`
-			Slug string `json:"slug"`
-		} `json:"event"`
-		Exported time.Time `json:"exported"`
-	} `json:"meta"`
+	Meta horaroMeta  `json:"meta"`
 	Data []eventData `json:"data"`
+}
+
+// ScheduleHoraroResponse is the modified response from horaro spaced out in days
+type ScheduleHoraroResponse struct {
+	Meta horaroMeta             `json:"meta"`
+	Data map[string][]eventData `json:"data"`
 }
 
 type eventData struct {
@@ -62,6 +70,45 @@ func indexOf(element string, data []string, compareFunc func(s, t string) bool) 
 // " and "
 // " & "
 var playersPattern = regexp.MustCompile(`\s*(\svs.\s|\svs\s|\s*,\s|\sand\s|\s&\s)\s*`)
+
+// OrganizeHoraro organizes the response from horaro into days
+func OrganizeHoraro(list TransformedHoraroResponse) ScheduleHoraroResponse {
+	schedule := ScheduleHoraroResponse{}
+	schedule.Meta = list.Meta
+
+	schedule.Data = make(map[string][]eventData)
+
+	for _, value := range list.Data {
+		// why, google, why would this be the format format
+		key := value.Scheduled.Format("2006-01-02")
+
+		if arr, ok := schedule.Data[key]; ok {
+			schedule.Data[key] = append(arr, value)
+		} else {
+			schedule.Data[key] = []eventData{value}
+		}
+	}
+
+	return schedule
+}
+
+// UpcomingHoraro gets the upcoming values from horaro
+func UpcomingHoraro(list TransformedHoraroResponse, amount int) TransformedHoraroResponse {
+	upcoming := TransformedHoraroResponse{}
+	upcoming.Meta = list.Meta
+
+	upcoming.Data = []eventData{}
+
+	for _, value := range list.Data {
+		if value.Scheduled.After(time.Now()) {
+			if len(upcoming.Data) < amount {
+				upcoming.Data = append(upcoming.Data, value)
+			}
+		}
+	}
+
+	return upcoming
+}
 
 // TransformHoraro transforms the response from the official horaro to a better format
 func TransformHoraro(horaro *HoraroResponse) TransformedHoraroResponse {

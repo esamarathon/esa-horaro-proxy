@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -16,7 +17,29 @@ var expiration = 15 * time.Minute
 var cleanupInterval = 30 * time.Minute
 var memoryCache = cache.New(expiration, cleanupInterval)
 
-func eventsPageHandler(w http.ResponseWriter, r *http.Request) {
+func getHoraro(endpoint string) (*TransformedHoraroResponse, error) {
+	// Return horaro response if still cached
+	response, found := memoryCache.Get(endpoint)
+	castedResponse, ok := response.(*TransformedHoraroResponse)
+	if found && ok {
+		return castedResponse, nil
+	}
+
+	log.Printf("Fetching new data for '%s' from Horaro", endpoint)
+
+	horaro, err := FetchHoraro(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	// Transform Horaro response into a better format and save it in cache
+	transformedHoraro := TransformHoraro(horaro)
+	defer memoryCache.Set(endpoint, &transformedHoraro, cache.DefaultExpiration)
+
+	return &transformedHoraro, nil
+}
+
+func upcomingPageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Ignore Options request from CORS
@@ -36,17 +59,7 @@ func eventsPageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return horaro response if still cached
-	response, found := memoryCache.Get(*endpoint)
-	if found {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
-		return
-	}
-
-	log.Printf("Fetching new data for '%s' from Horaro", *endpoint)
-
-	horaro, err := FetchHoraro(*endpoint)
+	horaro, err := getHoraro(*endpoint)
 	if err != nil {
 		log.Printf("Could not find the horaro data from '%s': %s", *endpoint, err.Error())
 		w.WriteHeader(http.StatusNotFound)
@@ -56,18 +69,60 @@ func eventsPageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Transform Horaro response into a better format and save it in cache
-	transformedHoraro := TransformHoraro(horaro)
-	defer memoryCache.Set(*endpoint, &transformedHoraro, cache.DefaultExpiration)
+	amountStr := r.FormValue("amount")
+	amount, err := strconv.Atoi(amountStr)
+	if amountStr == "" || err == nil {
+		amount = 5
+	}
+
+	upcoming := UpcomingHoraro(*horaro, amount)
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(transformedHoraro)
+	json.NewEncoder(w).Encode(upcoming)
+}
+
+func schedulePageHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Ignore Options request from CORS
+	if r.Method == http.MethodOptions {
+		return
+	}
+
+	// Get endpoint parameter from URL
+	parameter := mux.Vars(r)["endpoint"]
+	endpoint, err := FormatHoraroEndpoint(parameter)
+	if err != nil {
+		log.Printf("Invalid horaro link '%s': %s", parameter, err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": fmt.Sprintf("Invalid Horaro link: '%s'", err.Error()),
+		})
+		return
+	}
+
+	horaro, err := getHoraro(*endpoint)
+	if err != nil {
+		log.Printf("Could not find the horaro data from '%s': %s", *endpoint, err.Error())
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "Could not find the Horaro data",
+		})
+		return
+	}
+
+	schedule := OrganizeHoraro(*horaro)
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(schedule)
 }
 
 func main() {
 	router := mux.NewRouter()
 	router.SkipClean(true)
-	router.HandleFunc("/v1/esa/{endpoint:.+}", eventsPageHandler).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/v1/esa/upcoming/{endpoint:.+}", upcomingPageHandler).Queries("amount", "{amount}").Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/v1/esa/upcoming/{endpoint:.+}", upcomingPageHandler).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/v1/esa/schedule/{endpoint:.+}", schedulePageHandler).Methods(http.MethodGet, http.MethodOptions)
 
 	handler := CaselessMatcher(router)
 	handler = cors.Default().Handler(handler)
