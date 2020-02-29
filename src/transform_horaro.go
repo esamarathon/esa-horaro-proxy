@@ -108,7 +108,7 @@ func UpcomingHoraro(list TransformedHoraroResponse, amount int) TransformedHorar
 
 		start := value.Scheduled
 		end := value.Scheduled.Add(time.Second * time.Duration(value.Length))
-		if start.After(now) || end.Before(now) {
+		if start.After(now) || (start.Before(now) && end.After(now)) {
 			upcoming.Data = append(upcoming.Data, value)
 		}
 	}
