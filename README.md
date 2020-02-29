@@ -14,6 +14,10 @@ Build the application
 
 `$ go install -v ./...`
 
+Run the application
+
+`$ go run src/*`
+
 ## Docker
 
 To build the docker container, either:
