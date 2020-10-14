@@ -41,6 +41,7 @@ func getHoraro(endpoint string) (*TransformedHoraroResponse, error) {
 
 func upcomingPageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "max-age=3600") // 1 hour
 
 	// Ignore Options request from CORS
 	if r.Method == http.MethodOptions {
@@ -83,6 +84,7 @@ func upcomingPageHandler(w http.ResponseWriter, r *http.Request) {
 
 func schedulePageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "max-age=3600") // 1 hour
 
 	// Ignore Options request from CORS
 	if r.Method == http.MethodOptions {
