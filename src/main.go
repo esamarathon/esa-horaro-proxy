@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"log"
 	"net/http"
 	"strconv"
@@ -13,6 +14,12 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/rs/cors"
 )
+
+func hash(s string) string {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return fmt.Sprintf("%d", h.Sum32())
+}
 
 var expiration = 10 * time.Minute
 var cleanupInterval = 60 * time.Minute
@@ -78,11 +85,10 @@ func upcomingPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Cache-Control", "max-age=600")
 
-	eTag := `"updated-at:` + horaro.Schedule.Updated.UTC().Format(time.RFC3339Nano) + `"`
+	eTag := `"` + hash(horaro.Schedule.Updated.UTC().Format(time.RFC3339Nano)) + `"`
 	w.Header().Set("Etag", eTag)
 	if match := r.Header.Get("If-None-Match"); match != "" {
 		if strings.Contains(match, eTag) {
-			log.Println("NOT MODIFIEd")
 			w.WriteHeader(http.StatusNotModified)
 			return
 		}
@@ -132,7 +138,7 @@ func schedulePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Cache-Control", "max-age=360")
 
-	eTag := `"updated-at:` + horaro.Schedule.Updated.UTC().Format(time.RFC3339Nano) + `"`
+	eTag := `"` + hash(horaro.Schedule.Updated.UTC().Format(time.RFC3339Nano)) + `"`
 	w.Header().Set("Etag", eTag)
 	if match := r.Header.Get("If-None-Match"); match != "" {
 		if strings.Contains(match, eTag) {
