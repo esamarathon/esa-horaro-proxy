@@ -185,11 +185,12 @@ func schedulePageHandlerV1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	schedule := OrganizeHoraro(*horaro)
 	w.WriteHeader(http.StatusOK)
 	if expiry != nil {
 		w.Header().Set("Cache-Control", fmt.Sprintf("max-age=%d", (int)(expiry.Seconds())))
 	}
-	json.NewEncoder(w).Encode(horaro)
+	json.NewEncoder(w).Encode(schedule)
 }
 
 func schedulePageHandlerV2(w http.ResponseWriter, r *http.Request) {
