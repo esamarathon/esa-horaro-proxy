@@ -30,15 +30,20 @@ or, with docker-compose:
 
 ## Routes
 
-GET `/v1/esa/schedule/{endpoint}`: Get the speedruns by day for an event
-GET `/v1/esa/upcoming/{endpoint}?amount={int}`: Get the upcoming speedruns for an event (amount is optional, default is 5)
+**GET** `/v1/esa/schedule/{endpoint}`:
 
-Where endpoint can be in form:
+  Get all the speedruns for an event.
 
-- `https://horaro.org/esa/2019-one.json`
-- `https://horaro.org/esa/2018-two`
-- `2018-one.json`
-- `2017-two`
+**GET** `/v1/esa/upcoming/{endpoint}?amount={int}`:
+
+  Get the upcoming speedruns for an event (amount is optional, default is 5)
+
+  `{endpoint}` can be in form:
+
+  - `https://horaro.org/esa/2019-one.json`
+  - `https://horaro.org/esa/2018-two`
+  - `2018-one.json`
+  - `2017-two`
 
 ## LICENSE
 
