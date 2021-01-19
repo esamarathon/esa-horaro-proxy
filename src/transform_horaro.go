@@ -14,7 +14,6 @@ type JSONTime struct {
 
 // MarshalJSON converts dates to UTC and in the ISO8601 format
 func (t JSONTime) MarshalJSON() ([]byte, error) {
-	//do your serializing here
 	stamp := fmt.Sprintf("\"%s\"", t.UTC().Format(time.RFC3339))
 	return []byte(stamp), nil
 }
@@ -83,7 +82,7 @@ type ScheduleHoraroResponseV2 struct {
 
 type eventDataV1 struct {
 	Length    int         `json:"length"`
-	Scheduled JSONTime    `json:"scheduled"`
+	Scheduled time.Time   `json:"scheduled"`
 	Game      *string     `json:"game"`
 	Players   []string    `json:"players"`
 	Platform  *string     `json:"platform"`
@@ -232,7 +231,7 @@ func TransformHoraroV1(horaro *HoraroResponse) TransformedHoraroResponseV1 {
 	for i, value := range horaro.Schedule.Items {
 		eventList[i] = eventDataV1{}
 		eventList[i].Length = value.LengthT
-		eventList[i].Scheduled = JSONTime{value.Scheduled}
+		eventList[i].Scheduled = value.Scheduled
 		eventList[i].Options = value.Options
 
 		if playersColumnIndex > -1 {

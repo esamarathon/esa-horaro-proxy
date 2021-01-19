@@ -30,11 +30,11 @@ or, with docker-compose:
 
 ## Routes
 
-**GET** `/v1/esa/schedule/{endpoint}`:
+**GET** `/v2/esa/schedule/{endpoint}`:
 
   Get all the speedruns for an event.
 
-**GET** `/v1/esa/upcoming/{endpoint}?amount={int}`:
+**GET** `/v2/esa/upcoming/{endpoint}?amount={int}`:
 
   Get the upcoming speedruns for an event (amount is optional, default is 5)
 
