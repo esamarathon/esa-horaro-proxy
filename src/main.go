@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -77,6 +78,16 @@ func upcomingPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Cache-Control", "max-age=600")
 
+	eTag := `"updated-at:` + horaro.Schedule.Updated.UTC().Format(time.RFC3339Nano) + `"`
+	w.Header().Set("Etag", eTag)
+	if match := r.Header.Get("If-None-Match"); match != "" {
+		if strings.Contains(match, eTag) {
+			log.Println("NOT MODIFIEd")
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+	}
+
 	version := mux.Vars(r)["version"]
 	if version == "v1" {
 		w.WriteHeader(http.StatusOK)
@@ -120,6 +131,15 @@ func schedulePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Cache-Control", "max-age=360")
+
+	eTag := `"updated-at:` + horaro.Schedule.Updated.UTC().Format(time.RFC3339Nano) + `"`
+	w.Header().Set("Etag", eTag)
+	if match := r.Header.Get("If-None-Match"); match != "" {
+		if strings.Contains(match, eTag) {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+	}
 
 	version := mux.Vars(r)["version"]
 	if version == "v1" {
