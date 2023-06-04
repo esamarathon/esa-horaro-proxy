@@ -1,4 +1,4 @@
-FROM golang:1.13-alpine AS build
+FROM golang:1.20-alpine AS build
 RUN apk add --no-cache --virtual .build-deps \
   bash \
   gcc \

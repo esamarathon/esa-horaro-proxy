@@ -2,7 +2,7 @@
 
 Proxy for Horaro to allow CORS requests. It also slightly modifies the payload to more reasonable JSON and enables some caching for performance reasons.
 
-## Build
+## Build (outdated, just run `docker compose up`)
 
 Go to the root folder and execute the following steps:
 
