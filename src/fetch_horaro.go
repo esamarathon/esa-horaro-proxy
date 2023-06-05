@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -76,6 +78,31 @@ func FetchHoraro(endpoint string) (*HoraroResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return &response, nil
+}
+
+func FetchHoraroApi(endpoint string) (*string, error) {
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	buf := new(strings.Builder)
+	_, err = io.Copy(buf, resp.Body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	response := buf.String()
 
 	return &response, nil
 }
