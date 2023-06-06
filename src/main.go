@@ -56,8 +56,6 @@ func getHoraroApi(endpoint string) (*string, error) {
 		}
 	}
 
-	log.Printf("Fetching new data for '%s' from Horaro's api", endpoint)
-
 	horaro, err := FetchHoraroApi(endpoint)
 	if err != nil {
 		return nil, err
