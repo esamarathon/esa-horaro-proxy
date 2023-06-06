@@ -22,6 +22,10 @@ func FormatHoraroEndpoint(parameter string) (*string, error) {
 		return &horaroURL, nil
 	}
 
+	return ParseHoraroUrl(parameter)
+}
+
+func ParseHoraroUrl(parameter string) (*string, error) {
 	endpoint, err := url.Parse(parameter)
 	if err != nil {
 		return nil, errors.New("Can not parse URL")
