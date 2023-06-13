@@ -305,6 +305,8 @@ func TransformHoraroV2(horaro *HoraroResponse) TransformedHoraroResponseV2 {
 		if playersColumnIndex > -1 {
 			if (value.Data[playersColumnIndex] != nil) {
 				eventList[i].Players = playersPattern.Split(*value.Data[playersColumnIndex], -1)
+			} else {
+				eventList[i].Players = []string{}
 			}
 		}
 		if gameColumnIndex > -1 {
