@@ -1,4 +1,4 @@
-FROM golang:1.20-alpine AS build
+FROM golang:1.24-alpine AS build
 RUN apk add --no-cache --virtual .build-deps \
   bash \
   gcc \
@@ -19,5 +19,3 @@ COPY --from=build /go/src/app/webserver /app/
 WORKDIR /app
 EXPOSE 8080
 ENTRYPOINT ["./webserver"]
-
-
