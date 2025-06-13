@@ -12,10 +12,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflag
 RUN adduser -S -D -H -h /go/src/app webserver
 USER webserver
 
-#FROM scratch
-FROM alpine:3
+FROM scratch
 LABEL author="Christian Ruigrok <christian@ruigrok.info>"
-#COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /go/src/app/webserver /app/
 WORKDIR /app
 EXPOSE 8080
