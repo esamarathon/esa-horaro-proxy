@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const HoraroDomain = "horaro.net"
+
 var nonURLPattern = regexp.MustCompile(`^[^/]+$`)
 
 // FormatHoraroEndpoint validates the users supplied endpoint and throws an error if it doesn't exist
@@ -18,7 +20,7 @@ func FormatHoraroEndpoint(parameter string) (*string, error) {
 
 	// If parameter isn't a URL
 	if nonURLPattern.MatchString(parameter) {
-		horaroURL := fmt.Sprintf("https://horaro.org/esa/%s", parameter)
+		horaroURL := fmt.Sprintf("https://%s/esa/%s", HoraroDomain, parameter)
 		return &horaroURL, nil
 	}
 
@@ -31,7 +33,7 @@ func ParseHoraroUrl(parameter string) (*string, error) {
 		return nil, errors.New("Can not parse URL")
 	}
 
-	if endpoint.Hostname() != "horaro.org" {
+	if endpoint.Hostname() != HoraroDomain {
 		return nil, errors.New("Can not fetch from different domain than Horaro")
 	}
 
