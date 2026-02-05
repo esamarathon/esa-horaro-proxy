@@ -40,8 +40,8 @@ or, with docker-compose:
 
   `{endpoint}` can be in form:
 
-  - `https://horaro.org/esa/2019-one.json`
-  - `https://horaro.org/esa/2018-two`
+  - `https://horaro.net/esa/2019-one.json`
+  - `https://horaro.net/esa/2018-two`
   - `2018-one.json`
   - `2017-two`
 
